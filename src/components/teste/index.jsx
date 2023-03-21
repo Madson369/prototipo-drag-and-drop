@@ -112,7 +112,9 @@ export const MultiTables = ({ data }) => {
         <Card
           onDragStart={(e) => dragStart(e, index)}
           onDragEnter={(e) => dragEnter(e, index)}
-          onDragEnd={drop}
+          // onDragEnd={(event) => {
+          //   drop();
+          // }}
           draggable
           key={item.id}
         >
@@ -131,6 +133,9 @@ export const MultiTables = ({ data }) => {
             onDragOver={(event) => {
               event.preventDefault();
               setCurrentList(nome);
+            }}
+            onDrop={() => {
+              drop();
             }}
             id={nome}
           >
