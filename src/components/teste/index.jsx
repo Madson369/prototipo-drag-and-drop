@@ -68,6 +68,7 @@ export const MultiTables = ({ data }) => {
   }, [data]);
 
   const dragStart = (e, position) => {
+    e.dataTransfer.setData("text/html", e.target.id);
     dragItem.current = position;
     setStartList(e.target.parentNode.id);
   };
@@ -75,18 +76,10 @@ export const MultiTables = ({ data }) => {
     dragOverItem.current = position;
   };
 
-  useEffect(() => {
-    console.log(dragOverItem.current);
-  }, [dragOverItem.current]);
-  const drop = (e) => {
-    if (startList === currentList) {
-      const copyListItems = [...dados[currentList]];
-      const dragItemContent = copyListItems[dragItem.current];
-      copyListItems.splice(dragItem.current, 1);
-      copyListItems.splice(dragOverItem.current, 0, dragItemContent);
+  const drop = (event) => {
+    if (!event.dataTransfer.getData("text/html").includes("draggable")) {
       dragItem.current = null;
       dragOverItem.current = null;
-      controllers[currentList]([...copyListItems]);
       setStartList("");
       setCurrentList("");
       return;
@@ -115,8 +108,9 @@ export const MultiTables = ({ data }) => {
           // onDragEnd={(event) => {
           //   drop();
           // }}
-          draggable
+          draggable={true}
           key={item.id}
+          id={"draggable" + item.id}
         >
           {item.title}
         </Card>
@@ -125,21 +119,22 @@ export const MultiTables = ({ data }) => {
   };
 
   return (
-    <Container>
+    <Container draggable={false}>
       {nomes.map((nome) => {
         return (
           <CardContainer
+            draggable={false}
             key={nome}
             onDragOver={(event) => {
               event.preventDefault();
               setCurrentList(nome);
             }}
-            onDrop={() => {
-              drop();
+            onDrop={(event) => {
+              drop(event);
             }}
             id={nome}
           >
-            <CardHeader>
+            <CardHeader draggable={false}>
               <h3>{nome}</h3>
             </CardHeader>
             {returnList(dados[nome])}
