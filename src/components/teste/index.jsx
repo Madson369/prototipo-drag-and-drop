@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Container, CardContainer, Card, CardHeader } from "./styles";
+import { FixedSizeList as List } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 export const MultiTables = ({ data }) => {
   const dragItem = useRef();
@@ -67,19 +69,32 @@ export const MultiTables = ({ data }) => {
     }
   }, [data]);
 
-  const dragStart = (e, position) => {
+  const dragStart = (e, position, startingList) => {
     e.dataTransfer.setData("text/html", e.target.id);
     dragItem.current = position;
-    setStartList(e.target.parentNode.id);
+    setStartList(startingList);
   };
   const dragEnter = (e, position) => {
     dragOverItem.current = position;
   };
 
-  const drop = (event) => {
-    if (!event.dataTransfer.getData("text/html").includes("draggable")) {
+  const drop = (e) => {
+    if (!e.dataTransfer.getData("text/html").includes("draggable")) {
+      console.log("cringe");
       dragItem.current = null;
       dragOverItem.current = null;
+      setStartList("");
+      setCurrentList("");
+      return;
+    }
+    if (startList === currentList) {
+      const copyListItems = [...dados[currentList]];
+      const dragItemContent = copyListItems[dragItem.current];
+      copyListItems.splice(dragItem.current, 1);
+      copyListItems.splice(dragOverItem.current, 0, dragItemContent);
+      dragItem.current = null;
+      dragOverItem.current = null;
+      controllers[currentList]([...copyListItems]);
       setStartList("");
       setCurrentList("");
       return;
@@ -96,26 +111,68 @@ export const MultiTables = ({ data }) => {
     setStartList("");
     setCurrentList("");
   };
-  const returnList = (arr, stage) => {
+
+  const card = (props) => {
+    if (props.data.length === 0) {
+      return <div></div>;
+    }
+
+    const cardProps = props.data.array[props.index];
+
+    return (
+      <Card
+        style={props.style}
+        onDragStart={(e) => dragStart(e, props.index, props.data.list)}
+        onDragEnter={(e) => dragEnter(e, props.index)}
+        // onDragEnd={(event) => {
+        //   drop();
+        // }}
+        draggable={true}
+        key={cardProps.id}
+        id={"draggable" + cardProps.id}
+      >
+        {cardProps.title}
+      </Card>
+    );
+  };
+
+  const returnList = (arr, name) => {
     if (!arr) {
       return [];
     }
-    return arr.map((item, index) => {
-      return (
-        <Card
-          onDragStart={(e) => dragStart(e, index)}
-          onDragEnter={(e) => dragEnter(e, index)}
-          // onDragEnd={(event) => {
-          //   drop();
-          // }}
-          draggable={true}
-          key={item.id}
-          id={"draggable" + item.id}
-        >
-          {item.title}
-        </Card>
-      );
-    });
+
+    return (
+      <AutoSizer>
+        {({ height, width }) => (
+          <List
+            className="List"
+            height={height}
+            itemCount={arr.length}
+            itemSize={25}
+            width={width}
+            itemData={{ array: arr, list: name }}
+          >
+            {card}
+          </List>
+        )}
+      </AutoSizer>
+    );
+    // return arr.map((item, index) => {
+    //   return (
+    //     <Card
+    //       onDragStart={(e) => dragStart(e, index)}
+    //       onDragEnter={(e) => dragEnter(e, index)}
+    //       // onDragEnd={(event) => {
+    //       //   drop();
+    //       // }}
+    //       draggable={true}
+    //       key={item.id}
+    //       id={"draggable" + item.id}
+    //     >
+    //       {item.title}
+    //     </Card>
+    //   );
+    // });
   };
 
   return (
@@ -137,7 +194,7 @@ export const MultiTables = ({ data }) => {
             <CardHeader draggable={false}>
               <h3>{nome}</h3>
             </CardHeader>
-            {returnList(dados[nome])}
+            {returnList(dados[nome], nome)}
           </CardContainer>
         );
       })}

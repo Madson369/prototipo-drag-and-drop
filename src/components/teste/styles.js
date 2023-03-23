@@ -8,7 +8,7 @@ export const Container = styled.div`
 `;
 
 export const CardContainer = styled.div`
-  overflow: auto;
+  overflow: hidden;
   color: black;
   max-height: 100%;
   height: 350px;
