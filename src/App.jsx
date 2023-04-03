@@ -28,7 +28,7 @@ function App() {
   console.log(objects);
   return (
     <>
-      <MultiTables data={objects}></MultiTables>
+      <MultiTables data={data}></MultiTables>
       {/* <Tabugado data={data}></Tabugado> */}
     </>
   );

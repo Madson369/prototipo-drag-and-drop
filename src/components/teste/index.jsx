@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Container, CardContainer, Card, CardHeader } from "./styles";
 import { FixedSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
@@ -12,7 +12,6 @@ export const MultiTables = ({ data }) => {
   const [negociacao, setNegociacao] = useState([]);
   const [fechadoPerdido, setFechadoPerdido] = useState([]);
   const [fechadoGanho, setFechadoGanho] = useState([]);
-  const [startList, setStartList] = useState("");
   const [currentList, setCurrentList] = useState("");
 
   const nomes = [
@@ -70,23 +69,36 @@ export const MultiTables = ({ data }) => {
   }, [data]);
 
   const dragStart = (e, position, startingList) => {
-    e.dataTransfer.setData("text/html", e.target.id);
+    console.log(e.target.id);
+    e.dataTransfer.setData(
+      "text/html",
+      JSON.stringify({
+        id: e.target.id,
+        parent: startingList,
+      })
+    );
     dragItem.current = position;
-    setStartList(startingList);
+    // setStartList(startingList);
   };
+
   const dragEnter = (e, position) => {
     dragOverItem.current = position;
   };
 
   const drop = (e) => {
     if (!e.dataTransfer.getData("text/html").includes("draggable")) {
-      console.log("cringe");
       dragItem.current = null;
       dragOverItem.current = null;
-      setStartList("");
+      // setStartList("");
       setCurrentList("");
       return;
     }
+    console.log(
+      '!!! e.dataTransfer.getData("text/html")',
+      e.dataTransfer.getData("text/html")
+    );
+
+    const startList = JSON.parse(e.dataTransfer.getData("text/html")).parent;
     if (startList === currentList) {
       const copyListItems = [...dados[currentList]];
       const dragItemContent = copyListItems[dragItem.current];
@@ -95,7 +107,6 @@ export const MultiTables = ({ data }) => {
       dragItem.current = null;
       dragOverItem.current = null;
       controllers[currentList]([...copyListItems]);
-      setStartList("");
       setCurrentList("");
       return;
     }
@@ -108,7 +119,6 @@ export const MultiTables = ({ data }) => {
     dragOverItem.current = null;
     controllers[startList]([...copyOriginal]);
     controllers[currentList]([...copyCurrent]);
-    setStartList("");
     setCurrentList("");
   };
 
